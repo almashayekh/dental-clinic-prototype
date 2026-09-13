@@ -1,0 +1,59 @@
+th><th>الوقت</th><th>المريض</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody id="periodPayments"></tbody></table></div>
+  </div>
+</section>
+
+</main>
+<div id="toast" class="toast"></div>
+<script>
+const statuses={"Scheduled":["مجدول","scheduled"],"Arrived":["وصل","arrived"],"With Dentist":["عند الطبيب","dentist"],"Completed":["مكتمل","completed"],"Cancelled":["ملغي","cancelled"],"No Show":["لم يحضر","noshow"]};
+let patients=[
+{id:1,name:"أحمد محمد",phone:"0791234567",national:"",gender:"ذكر",dob:"1988-04-12",general:"",balance:20},
+{id:2,name:"سارة علي",phone:"0784455667",national:"",gender:"أنثى",dob:"1994-03-20",general:"",balance:0},
+{id:3,name:"محمد سالم",phone:"0773456789",national:"",gender:"ذكر",dob:"1980-11-07",general:"",balance:0},
+{id:4,name:"لين عبدالله",phone:"0797788990",national:"",gender:"أنثى",dob:"1998-06-10",general:"",balance:35},
+{id:5,name:"يوسف محمود",phone:"0781112233",national:"",gender:"ذكر",dob:"1975-01-15",general:"",balance:0},
+{id:6,name:"رامي أحمد",phone:"0793322110",national:"",gender:"ذكر",dob:"1990-09-09",general:"",balance:0}
+];
+let appointments=[
+{id:1,time:"09:00",patientId:1,reason:"فحص",doctor:"د. خالد",status:"Scheduled",late:true},
+{id:2,time:"09:30",patientId:2,reason:"ألم في الضرس",doctor:"د. خالد",status:"Arrived"},
+{id:3,time:"10:00",patientId:3,reason:"علاج عصب",doctor:"د. أحمد",status:"With Dentist"},
+{id:4,time:"10:30",patientId:4,reason:"حشوة",doctor:"د. خالد",status:"Completed",visitTotal:35,items:[{name:"حشوة",price:35}]},
+{id:5,time:"11:00",patientId:5,reason:"تنظيف",doctor:"د. أحمد",status:"Cancelled"},
+{id:6,time:"11:30",patientId:6,reason:"تنظيف",doctor:"د. أحمد",status:"Completed",visitTotal:25,items:[{name:"تنظيف",price:25}],paid:true}
+];
+let payments=[
+{id:1,date:"2026-09-13",time:"10:50",patientId:6,amount:25,method:"نقدي",remaining:0},
+{id:2,date:"2026-09-13",time:"09:15",patientId:2,amount:15,method:"بطاقة",remaining:0},
+{id:3,date:"2026-09-12",time:"15:20",patientId:1,amount:20,method:"نقدي",remaining:20},
+{id:4,date:"2026-09-10",time:"13:05",patientId:4,amount:35,method:"تحويل",remaining:35},
+{id:5,date:"2026-09-05",time:"11:10",patientId:3,amount:80,method:"بطاقة",remaining:0}
+];
+let timelines={
+1:[{title:"دفعة",text:"12/09/2026 • 20 د.أ"},{title:"موعد",text:"13/09/2026 • 09:00"}],
+2:[{title:"موعد اليوم",text:"تم تسجيل الوصول"},{title:"دفعة",text:"13/09/2026 • 15 د.أ"}],
+4:[{title:"زيارة مكتملة",text:"13/09/2026 • حشوة • 35 د.أ"}]
+};
+let currentPatient=1,currentAppt=null,editingAppt=null,editingPatient=null,returnTo="patients",activeSt="all";
+const money=v=>`${Number(v||0).toFixed(0)} د.أ`, P=id=>patients.find(x=>x.id===Number(id)), A=id=>appointments.find(x=>x.id===Number(id));
+function go(n){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));document.getElementById("screen-"+n).classList.add("active");document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.nav===n));if(n==="schedule")renderSchedule();if(n==="patients")renderPatients();if(n==="profile")renderProfile();if(n==="reports")renderDailyReport();window.scrollTo(0,0)}
+function setSt(b){document.querySelectorAll(".tabs .tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");activeSt=b.dataset.st;renderSchedule()}
+function renderSchedule(){
+ const q=(document.getElementById("scheduleSearch")?.value||"").toLowerCase(),doc=document.getElementById("docFilter")?.value||"all";
+ const list=appointments.filter(a=>{const p=P(a.patientId);return(!q||p.name.toLowerCase().includes(q)||p.phone.includes(q))&&(doc==="all"||a.doctor===doc)&&(activeSt==="all"||a.status===activeSt)});
+ document.getElementById("scheduleBody").innerHTML=list.map(a=>{const p=P(a.patientId),s=statuses[a.status];let act="";
+ if(a.status==="Scheduled")act=`<button class="btn sm primary" onclick="checkIn(${a.id})">وصل</button><button class="btn sm" onclick="editAppt(${a.id})">تعديل</button>`;
+ else if(a.status==="Arrived"||a.status==="With Dentist")act=`<button class="btn sm" onclick="openProfile(${p.id})">ملف المريض</button><span class="sub">بانتظار الطبيب</span>`;
+ else if(a.status==="Completed"&&!a.paid)act=`<button class="btn sm success" onclick="checkout(${a.id})">تحصيل ${money((a.visitTotal||0)+(p.balance||0))}</button><button class="btn sm" onclick="openProfile(${p.id})">الملف</button>`;
+ else if(a.status==="Completed")act=`<span class="badge completed">مدفوع</span><button class="btn sm" onclick="openProfile(${p.id})">الملف</button>`;
+ else act=`<button class="btn sm" onclick="openProfile(${p.id})">ملف المريض</button>`;
+ return `<tr><td><strong>${a.time}</strong>${a.late?'<div class="late">متأخر 25 دقيقة</div>':""}</td><td><div class="patient-name">${p.name}</div><div class="sub">${p.phone}</div>${p.balance?`<span class="balance">مستحق ${money(p.balance)}</span>`:""}</td><td>${a.reason}</td><td>${a.doctor}</td><td><span class="badge ${s[1]}">${s[0]}</span></td><td><div class="actions">${act}</div></td></tr>`}).join("");
+ const c=s=>appointments.filter(a=>a.status===s).length;ca.textContent=appointments.length;cs.textContent=c("Scheduled");car.textContent=c("Arrived");cd.textContent=c("With Dentist");cc.textContent=c("Completed");
+}
+function checkIn(id){A(id).status="Arrived";A(id).late=false;toast("تم تسجيل وصول المريض");renderSchedule()}
+function fillPatientSelect(){apptPatient.innerHTML=patients.map(p=>`<option value="${p.id}">${p.name} — ${p.phone}</option>`).join("")}
+function newAppointment(){editingAppt=null;fillPatientSelect();apptTitle.textContent="حجز موعد جديد";apptTime.value="13:00";apptReason.value="";apptNote.value="";go("appointment")}
+function editAppt(id){const a=A(id);editingAppt=id;fillPatientSelect();apptTitle.textContent="تعديل الموعد";apptPatient.value=a.patientId;apptDoctor.value=a.doctor;apptTime.value=a.time;apptReason.value=a.reason;apptNote.value=a.note||"";go("appointment")}
+function saveAppt(){const obj={patientId:Number(apptPatient.value),doctor:apptDoctor.value,time:apptTime.value,reason:apptReason.value||"غير محدد",note:apptNote.value};if(editingAppt)Object.assign(A(editingAppt),obj);else appointments.push({id:Date.now(),...obj,status:"Scheduled"});toast("تم حفظ الموعد");go("schedule")}
+function patientFormFromAppt(){returnTo="appointment";openPatientForm()}
+function renderPatients(){const q=(patientSearch?.value||"").toLowerCase();patientCards.innerHTML=patients.filter(p=>!q||p.name.toLowerCase().includes(q)||p.phone.includes(q)||(p.national||"").includes(q)).map(p=>`<div class=
