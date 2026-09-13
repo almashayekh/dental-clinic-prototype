@@ -1,0 +1,85 @@
+class="note">لا تظهر هنا تفاصيل العلاج أو الـDental Chart. الاستقبال يحجز الموعد ويتابع حالته فقط.</div></div>
+  </div>
+</section>
+
+<section id="screen-patients" class="screen">
+  <div class="head"><div><h1>المرضى</h1><p>بحث سريع وفتح الملف والحجز</p></div><button class="btn primary" onclick="openPatientForm()">＋ مريض جديد</button></div>
+  <div class="card toolbar"><div class="search" style="width:100%"><span>⌕</span><input id="patientSearch" style="width:100%" placeholder="الاسم أو الهاتف أو الرقم الوطني" oninput="renderPatients()"></div></div>
+  <div id="patientCards" class="grid3"></div>
+</section>
+
+<section id="screen-patient-form" class="screen">
+  <div class="breadcrumb"><button onclick="returnPatientForm()">رجوع</button> ← بيانات المريض</div>
+  <div class="head"><div><h1 id="pfTitle">مريض جديد</h1><p>بيانات التسجيل الأساسية فقط</p></div></div>
+  <div class="card pad">
+    <div class="grid2">
+      <div class="field"><label>الاسم *</label><input id="pfName"></div><div class="field"><label>الموبايل *</label><input id="pfPhone"></div>
+      <div class="field"><label>الجنس</label><select id="pfGender"><option value="">غير محدد</option><option>ذكر</option><option>أنثى</option></select></div><div class="field"><label>تاريخ الميلاد</label><input type="date" id="pfDob"></div>
+      <div class="field"><label>الرقم الوطني</label><input id="pfNational"></div><div class="field"><label>ملاحظات عامة</label><input id="pfGeneral"></div>
+    </div>
+    <div class="footer-actions"><button class="btn primary" onclick="savePatient()">حفظ</button><button class="btn" onclick="returnPatientForm()">إلغاء</button></div>
+  </div>
+</section>
+
+<section id="screen-profile" class="screen">
+  <div class="breadcrumb"><button onclick="go('patients')">المرضى</button> ← ملف المريض</div>
+  <div class="head"><div><h1>ملف المريض — الاستقبال</h1><p>بيانات ومواعيد ودفعات، بدون تعديل السجل السريري</p></div><div class="head-actions"><button class="btn" onclick="editCurrentPatient()">تعديل البيانات</button><button class="btn primary" onclick="bookCurrent()">حجز موعد</button></div></div>
+  <div class="profile-head">
+    <div class="card pad"><h2 id="prName" style="margin:0"></h2><div class="sub" id="prPhone"></div></div>
+    <div class="card metric"><span>الرصيد المستحق</span><strong id="prBalance"></strong></div>
+    <div class="card metric"><span>الموعد القادم</span><strong id="prNext"></strong></div>
+    <div class="card metric"><span>آخر دفعة</span><strong id="prLastPay"></strong></div>
+  </div>
+  <div class="two">
+    <div class="card pad"><div class="section-title">Timeline</div><div id="prTimeline" class="timeline"></div></div>
+    <div class="card pad"><div class="section-title">معلومات يراها الاستقبال</div><div class="note">الاستقبال يرى أن الزيارة اكتملت وقيمة الاستحقاق والدفعات، لكن لا يستطيع تعديل الإجراءات أو الملاحظات الطبية.</div></div>
+  </div>
+</section>
+
+<section id="screen-checkout" class="screen">
+  <div class="breadcrumb"><button onclick="go('schedule')">المواعيد</button> ← التحصيل</div>
+  <div class="head"><div><h1>التحصيل والدفع</h1><p id="coPatient"></p></div></div>
+  <div class="two">
+    <div class="card pad"><div class="section-title">تفاصيل المبلغ</div><div id="coItems"></div><div class="moneyline"><span>رصيد سابق</span><strong id="coOld"></strong></div><div class="moneyline total"><span>المطلوب</span><strong id="coDue"></strong></div></div>
+    <div class="card pad">
+      <div class="section-title">تسجيل دفعة</div>
+      <div class="field"><label>المدفوع الآن *</label><input type="number" min="0" id="coPay" oninput="previewPay()"></div>
+      <div class="field"><label>طريقة الدفع</label><select id="coMethod"><option>نقدي</option><option>بطاقة</option><option>تحويل</option></select></div>
+      <div class="field"><label>تاريخ الدفع</label><input type="date" id="coDate" value="2026-09-13"></div>
+      <div class="moneyline"><span>المتبقي</span><strong id="coRemain"></strong></div>
+      <div class="footer-actions"><button class="btn primary" onclick="recordPayment()">تسجيل الدفع</button><button class="btn" onclick="go('schedule')">رجوع</button></div>
+      <div id="receipt" class="note hidden" style="margin-top:14px"></div>
+    </div>
+  </div>
+</section>
+
+<section id="screen-reports" class="screen">
+  <div class="head"><div><h1>تقارير التحصيل</h1><p>تقارير تشغيلية بسيطة للاستقبال — وليست نظام محاسبة</p></div><button class="btn" onclick="window.print()">طباعة التقرير</button></div>
+  <div class="report-tabs"><button class="report-tab active" id="dailyTab" onclick="showReport('daily')">تحصيل اليوم</button><button class="report-tab" id="periodTab" onclick="showReport('period')">تقرير فترة</button></div>
+
+  <div id="dailyReport">
+    <div class="kpis">
+      <div class="card kpi"><span>إجمالي التحصيل اليوم</span><strong id="rdTotal"></strong><small>13/09/2026</small></div>
+      <div class="card kpi"><span>نقدي</span><strong id="rdCash"></strong></div>
+      <div class="card kpi"><span>بطاقة</span><strong id="rdCard"></strong></div>
+      <div class="card kpi"><span>تحويل</span><strong id="rdTransfer"></strong></div>
+    </div>
+    <div class="card tablewrap"><table class="data"><thead><tr><th>الوقت</th><th>المريض</th><th>الدفعة</th><th>الطريقة</th><th>المتبقي بعد الدفع</th></tr></thead><tbody id="dailyPayments"></tbody></table></div>
+  </div>
+
+  <div id="periodReport" class="hidden">
+    <div class="card pad" style="margin-bottom:14px">
+      <div class="report-controls">
+        <div class="field" style="margin:0"><label>من</label><input id="rfFrom" type="date" value="2026-09-01"></div>
+        <div class="field" style="margin:0"><label>إلى</label><input id="rfTo" type="date" value="2026-09-13"></div>
+        <div class="field" style="margin:0"><label>طريقة الدفع</label><select id="rfMethod"><option value="all">الكل</option><option>نقدي</option><option>بطاقة</option><option>تحويل</option></select></div>
+        <button class="btn primary" onclick="renderPeriodReport()">عرض التقرير</button>
+      </div>
+    </div>
+    <div class="kpis">
+      <div class="card kpi"><span>إجمالي التحصيل</span><strong id="rpTotal"></strong></div>
+      <div class="card kpi"><span>عدد الدفعات</span><strong id="rpCount"></strong></div>
+      <div class="card kpi"><span>متوسط الدفعة</span><strong id="rpAvg"></strong></div>
+      <div class="card kpi"><span>إجمالي المتبقي الحالي</span><strong id="rpOutstanding"></strong></div>
+    </div>
+    <div class="card tablewrap"><table class="data"><thead><tr><th>التاريخ</
