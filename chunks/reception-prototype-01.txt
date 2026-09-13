@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dental Clinic — Reception Prototype</title><style>
+:root{
+  --bg:#f5f7fb;--surface:#fff;--surface2:#f8fafc;--line:#e5e7eb;--text:#111827;--muted:#667085;
+  --primary:#2563eb;--primary2:#1d4ed8;--green:#047857;--greenbg:#ecfdf5;--amber:#b45309;--amberbg:#fffbeb;
+  --red:#b91c1c;--redbg:#fef2f2;--purple:#7e22ce;--purplebg:#faf5ff;--bluebg:#eff6ff;--shadow:0 8px 24px rgba(15,23,42,.07);--r:16px
+}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Tahoma,"Segoe UI",Arial,sans-serif}
+button,input,select,textarea{font:inherit}button{cursor:pointer}
+.topbar{height:68px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:40}
+.brand{display:flex;align-items:center;gap:11px}.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#2563eb,#60a5fa);display:grid;place-items:center;color:#fff;font-weight:900}
+.brand strong{display:block;font-size:15px}.brand small{color:var(--muted)}
+.nav{display:flex;gap:5px;background:#f8fafc;border:1px solid var(--line);padding:4px;border-radius:12px}.nav button{border:0;background:transparent;color:#667085;padding:9px 15px;border-radius:9px}.nav button.active{background:#fff;color:var(--primary);font-weight:900;box-shadow:0 2px 8px rgba(15,23,42,.06)}
+.user{display:flex;align-items:center;gap:10px}.avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:#e0e7ff;color:#3730a3;font-weight:900}.role{font-size:12px;color:var(--muted)}
+main{width:min(1440px,calc(100% - 38px));margin:24px auto 42px}.screen{display:none}.screen.active{display:block}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:18px}.head h1{margin:0;font-size:26px}.head p{margin:6px 0 0;color:var(--muted);font-size:13px}.head-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:#fff;color:#374151;padding:10px 15px;border-radius:11px;font-weight:800}.btn:hover{background:#f8fafc}.btn.primary{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 5px 14px rgba(37,99,235,.18)}.btn.primary:hover{background:var(--primary2)}.btn.success{background:var(--greenbg);border-color:#a7f3d0;color:var(--green)}.btn.danger{background:var(--redbg);border-color:#fecaca;color:var(--red)}.btn.sm{padding:7px 10px;border-radius:9px;font-size:12px}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:0 3px 12px rgba(15,23,42,.03)}.pad{padding:18px}.toolbar{padding:15px;margin-bottom:14px}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.between{justify-content:space-between}.search{position:relative}.search span{position:absolute;right:13px;top:50%;transform:translateY(-50%);color:#98a2b3}.search input{padding-right:38px;min-width:280px}
+input,select,textarea{width:100%;border:1px solid var(--line);background:#fff;border-radius:10px;padding:11px 12px;color:var(--text);outline:none}input:focus,select:focus,textarea:focus{border-color:#93c5fd;box-shadow:0 0 0 3px #dbeafe}textarea{resize:vertical;min-height:92px}
+label{display:block;font-size:12px;font-weight:800;color:#475467;margin-bottom:7px}.field{margin-bottom:15px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.section-title{font-size:14px;font-weight:900;margin:2px 0 13px}.section-gap{margin-top:20px}.sub{font-size:12px;color:var(--muted);margin-top:4px}.note{padding:11px 13px;background:#f8fafc;border:1px solid var(--line);border-radius:10px;color:#667085;font-size:12px}
+.tablewrap{overflow:auto}.data{width:100%;border-collapse:collapse;table-layout:fixed;min-width:930px}.data th{text-align:right;background:#f8fafc;color:#667085;font-size:12px;padding:13px 14px;border-bottom:1px solid var(--line)}.data td{padding:14px;border-bottom:1px solid #eef0f3;vertical-align:middle}.data tbody tr:hover{background:#fbfdff}
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:78px;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:900}.scheduled{background:#dbeafe;color:#1d4ed8}.arrived{background:#fef3c7;color:#b45309}.dentist{background:#f3e8ff;color:#7e22ce}.completed{background:#dcfce7;color:#15803d}.cancelled{background:#fee2e2;color:#b91c1c}.noshow{background:#f3f4f6;color:#4b5563}
+.actions{display:flex;gap:7px;flex-wrap:wrap}.patient-name{font-weight:900}.balance{display:inline-block;margin-top:5px;padding:3px 7px;border-radius:999px;background:#fffbeb;border:1px solid #fde68a;color:#b45309;font-size:11px}.late{font-size:11px;color:#b91c1c;margin-top:4px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}.tab{border:1px solid var(--line);background:#fff;color:#667085;padding:8px 13px;border-radius:999px;font-size:12px}.tab.active{background:var(--bluebg);border-color:#bfdbfe;color:#1d4ed8;font-weight:900}.tab b{background:#f3f4f6;padding:2px 7px;border-radius:999px;margin-right:4px}
+.breadcrumb{font-size:12px;color:var(--muted);margin-bottom:8px}.breadcrumb button{border:0;background:transparent;color:var(--primary);padding:0}.footer-actions{display:flex;gap:9px;padding-top:16px;border-top:1px solid var(--line);margin-top:10px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}.kpi{padding:16px}.kpi span{font-size:12px;color:var(--muted)}.kpi strong{display:block;margin-top:6px;font-size:22px}.kpi small{display:block;margin-top:4px;color:var(--muted)}
+.moneyline{display:flex;justify-content:space-between;gap:15px;padding:10px 0;border-bottom:1px solid #eef0f3}.moneyline:last-child{border-bottom:0}.moneyline.total{font-size:18px;font-weight:900}
+.profile-head{display:grid;grid-template-columns:1.3fr repeat(3,.7fr);gap:12px;margin-bottom:14px}.metric{padding:16px}.metric span{font-size:12px;color:var(--muted)}.metric strong{display:block;margin-top:6px;font-size:18px}
+.alerts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.alert{padding:7px 9px;border-radius:9px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:12px}
+.timeline{position:relative;margin-right:9px;pa
