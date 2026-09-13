@@ -1,0 +1,76 @@
+iv class="head"><div><h1>زيارة الطبيب</h1><p id="visitPatient"></p></div><div class="head-actions"><button class="btn" onclick="openProfile(currentPatient)">ملف المريض</button><button class="btn success" onclick="finishVisit()">إنهاء الزيارة</button></div></div>
+  <div id="medicalSummary" class="medical"></div>
+  <div class="visit-layout">
+    <div class="card pad">
+      <div class="section-title">Dental Chart — اختر السن/الأسنان</div>
+      <div class="dental-chart-wrap">
+        <div class="chart-hint">اضغط على سن واحد أو أكثر لتحديد مكان الإجراء</div>
+        <svg id="dentalChartSvg" class="dental-svg" viewBox="0 0 900 540" role="img" aria-label="خريطة الأسنان العلوية والسفلية">
+          <path class="gum-arc" d="M145 210 Q450 36 755 210"/>
+          <path class="jaw-guide" d="M145 210 Q450 36 755 210"/>
+          <g id="upperSvgTeeth"></g>
+
+          <path class="gum-arc" d="M145 330 Q450 504 755 330"/>
+          <path class="jaw-guide" d="M145 330 Q450 504 755 330"/>
+          <g id="lowerSvgTeeth"></g>
+
+          <text x="450" y="28" text-anchor="middle" style="font:700 13px Tahoma;fill:#64748b">الفك العلوي</text>
+          <text x="450" y="528" text-anchor="middle" style="font:700 13px Tahoma;fill:#64748b">الفك السفلي</text>
+        </svg>
+        <div class="chart-legend">
+          <span><i class="legend-dot"></i> غير محدد</span>
+          <span><i class="legend-dot sel"></i> محدد للإجراء</span>
+        </div>
+      </div>
+      <div class="field section-gap"><label>ملاحظات سريرية</label><textarea id="clinicalNotes" placeholder="ملاحظات الطبيب"></textarea></div>
+    </div>
+    <div class="card pad">
+      <div class="section-title">الإجراءات المنفذة</div>
+      <div class="proc-row">
+        <div class="field" style="margin:0"><label>السن/الأسنان</label><input id="selectedTeeth" readonly placeholder="اختر من الرسم"></div>
+        <div class="field" style="margin:0"><label>الإجراء</label><select id="procSelect"></select></div>
+        <div class="field" style="margin:0"><label>السعر الفعلي</label><input type="number" min="0" id="procPrice"></div>
+        <button class="btn primary" onclick="addProcedure()">إضافة</button>
+      </div>
+      <div id="procList" style="margin-top:12px"></div>
+      <div class="totalbox"><span>مجموع الزيارة</span><span id="visitTotal">0 د.أ</span></div>
+      <div class="note" style="margin-top:14px">السعر هنا يحدده الطبيب للإجراء المنفذ. التحصيل نفسه لا يظهر للطبيب.</div>
+    </div>
+  </div>
+</section>
+
+</main>
+<div id="toast" class="toast"></div>
+<script>
+const procedures=[{id:1,name:"فحص",price:15},{id:2,name:"تنظيف",price:25},{id:3,name:"حشوة",price:35},{id:4,name:"علاج عصب",price:80},{id:5,name:"خلع",price:30},{id:6,name:"تلبيسة",price:120},{id:7,name:"زراعة",price:400}];
+let patients=[
+{id:1,name:"أحمد محمد",phone:"0791234567",allergies:"بنسلين",chronic:"ضغط",meds:"دواء ضغط",last:"05/09/2026"},
+{id:2,name:"سارة علي",phone:"0784455667",allergies:"",chronic:"",meds:"",last:"01/09/2026"},
+{id:3,name:"محمد سالم",phone:"0773456789",allergies:"",chronic:"سكري",meds:"Metformin",last:"20/08/2026"},
+{id:4,name:"لين عبدالله",phone:"0797788990",allergies:"",chronic:"",meds:"",last:"10/09/2026"},
+{id:5,name:"يوسف محمود",phone:"0781112233",allergies:"",chronic:"",meds:"",last:"15/07/2026"}
+];
+let appointments=[
+{id:1,time:"09:00",patientId:1,reason:"فحص",status:"Arrived"},
+{id:2,time:"09:30",patientId:2,reason:"ألم في الضرس",status:"Arrived"},
+{id:3,time:"10:00",patientId:3,reason:"علاج عصب",status:"With Dentist"},
+{id:4,time:"10:30",patientId:4,reason:"حشوة",status:"Completed"}
+];
+let histories={
+1:[{title:"زيارة",text:"05/09/2026 • سن 16 • حشوة"}],
+3:[{title:"زيارة",text:"20/08/2026 • سن 26 • علاج عصب"}],
+4:[{title:"زيارة",text:"10/09/2026 • سن 11 • حشوة تجميلية"}]
+};
+let toothHist={
+1:[{tooth:"16",text:"حشوة Composite — 05/09/2026"}],
+3:[{tooth:"26",text:"علاج عصب — 20/08/2026"}],
+4:[{tooth:"11",text:"حشوة تجميلية — 10/09/2026"}]
+};
+let currentPatient=1,currentAppt=null,selected=[],visitItems=[];
+const upper=["18","17","16","15","14","13","12","11","21","22","23","24","25","26","27","28"],lower=["48","47","46","45","44","43","42","41","31","32","33","34","35","36","37","38"];
+const P=id=>patients.find(x=>x.id===Number(id)),A=id=>appointments.find(x=>x.id===Number(id)),money=v=>`${Number(v||0).toFixed(0)} د.أ`;
+function go(n){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));document.getElementById("screen-"+n).classList.add("active");document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.nav===n));if(n==="today")renderToday();if(n==="patients")renderPatients();if(n==="profile")renderProfile();if(n==="visit")renderVisit();window.scrollTo(0,0)}
+function renderToday(){todayBody.innerHTML=appointments.filter(a=>a.status!=="Scheduled").map(a=>{const p=P(a.patientId);let st=a.status==="Arrived"?"وصل":a.status==="With Dentist"?"عند الطبيب":"مكتمل",cls=a.status==="Arrived"?"arrived":a.status==="With Dentist"?"dentist":"completed",act=a.status==="Completed"?`<button class="btn sm" onclick="openProfile(${p.id})">عرض الملف</button>`:`<button class="btn sm primary" onclick="startVisit(${a.id})">${a.status==="With Dentist"?"متابعة الزيارة":"بدء الزيارة"}</button>`;return `<tr><td><strong>${a.time}</strong></td><td><div class="patient-name">${p.name}</div><div class="sub">${p.phone}</div></td><td>${a.reason}</td><td><span class="badge ${cls}">${st}</span></td><td>${act}</td></tr>`}).join("")}
+function renderPatients(){const q=(searchPatient?.value||"").toLowerCase();patientCards.innerHTML=patients.filter(p=>!q||p.name.toLowerCase().includes(q)||p.phone.includes(q)).map(p=>`<div class="card pad"><h3 style="margin:0 0 5px">${p.name}</h3><div class="sub">${p.phone}</div><div class="moneyline"><span>آخر زيارة</span><strong>${p.last}</strong></div><button class="btn sm primary" style="margin-top:12px" onclick="openProfile(${p.id})">فتح الملف السريري</button></div>`).join("")}
+function openProfile(id){currentPatient=id;go("profile")}
+function renderProfile(){const p=P(currentPatient);prName.textContent=p.name;prPhone.textContent=p.phone;prLast.textContent=p.last||"—";const a=appointments.find(x=>x.patientId===p.id&&["Arrived","With Dentist"].includes(x.status));prAppt.textContent=a?`${a.time} • ${a.reason}`:"لا يوجد";const th=toothHist[p.id]||[];prTeeth.textContent=th.length;const al=[];if(p.allergies)al.push(`حساسية: ${p.allergies}`);if(p.chronic)al.push(`مزمن: ${p.chronic}`);if(p.meds)al.push(`أدوية:
