@@ -1,0 +1,54 @@
+ ${p.meds}`);alerts.innerHTML=al.length?al.map(x=>`<span class="alert">${x}</span>`).join(""):`<span class="sub">لا توجد تنبيهات طبية</span>`;const h=histories[p.id]||[{title:"لا يوجد تاريخ علاجي",text:"سيظهر هنا بعد تسجيل أول زيارة"}];timeline.innerHTML=h.map(x=>`<div class="event"><h4>${x.title}</h4><p>${x.text}</p></div>`).join("");toothHistory.innerHTML=th.length?th.map(x=>`<div class="moneyline"><span>سن ${x.tooth}</span><strong>${x.text}</strong></div>`).join(""):`<div class="sub">لا يوجد تاريخ أسنان مسجل.</div>`}
+function startVisitForCurrent(){let a=appointments.find(x=>x.patientId===currentPatient&&["Arrived","With Dentist"].includes(x.status));if(!a){a={id:Date.now(),time:"الآن",patientId:currentPatient,reason:"زيارة مباشرة",status:"With Dentist"};appointments.push(a)}startVisit(a.id)}
+function startVisit(id){currentAppt=id;currentPatient=A(id).patientId;A(id).status="With Dentist";selected=[];visitItems=A(id).visitItems?JSON.parse(JSON.stringify(A(id).visitItems)):[];go("visit")}
+function renderVisit(){const p=P(currentPatient),a=A(currentAppt);visitPatient.textContent=`${p.name} • ${p.phone} • ${a?.reason||""}`;const m=[];if(p.allergies)m.push(`حساسية: ${p.allergies}`);if(p.chronic)m.push(`أمراض مزمنة: ${p.chronic}`);if(p.meds)m.push(`أدوية: ${p.meds}`);medicalSummary.innerHTML=`<strong>ملخص طبي مهم</strong>${m.length?m.map(x=>`<span>${x}</span>`).join(""):"<span>لا توجد تنبيهات طبية</span>"}`;procSelect.innerHTML=procedures.map(x=>`<option value="${x.id}">${x.name}</option>`).join("");procSelect.onchange=()=>procPrice.value=procedures.find(x=>x.id===Number(procSelect.value)).price;procPrice.value=procedures[0].price;renderTeeth();renderItems()}
+function toothPoints(cx,cy,w,h,flip){
+  const crown=flip?cy+h*.28:cy-h*.28;
+  const neck=flip?cy+h*.05:cy-h*.05;
+  const root=flip?cy-h*.48:cy+h*.48;
+  const mid=flip?cy-h*.24:cy+h*.24;
+  return [
+    [cx-w*.42,crown],[cx-w*.50,neck],[cx-w*.30,mid],
+    [cx-w*.13,root],[cx,mid],[cx+w*.13,root],
+    [cx+w*.30,mid],[cx+w*.50,neck],[cx+w*.42,crown]
+  ].map(p=>p.join(",")).join(" ");
+}
+function buildArch(teeth,isUpper){
+  const frag=document.createDocumentFragment(),n=teeth.length;
+  teeth.forEach((t,i)=>{
+    const u=i/(n-1),x=145+u*610,curve=Math.pow((u-.5)*2,2);
+    const y=isUpper?(92+curve*118):(448-curve*118);
+    const d=Math.abs(i-7.5),w=d<2?29:d<4?34:39,h=d<2?72:d<4?66:60;
+    const angle=(u-.5)*(isUpper?34:-34);
+    const g=document.createElementNS("http://www.w3.org/2000/svg","g");
+    g.setAttribute("class","tooth-g"+(selected.includes(t)?" selected":""));
+    g.setAttribute("tabindex","0");g.setAttribute("role","button");g.setAttribute("aria-label","سن "+t);
+    g.setAttribute("transform",`translate(${x} ${y}) rotate(${angle}) translate(${-x} ${-y})`);
+    g.onclick=()=>toggleTooth(t);
+    g.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();toggleTooth(t)}};
+    const p=document.createElementNS("http://www.w3.org/2000/svg","polygon");
+    p.setAttribute("class","tooth-shape");p.setAttribute("points",toothPoints(x,y,w,h,!isUpper));
+    const label=document.createElementNS("http://www.w3.org/2000/svg","text");
+    label.setAttribute("class","tooth-label");label.setAttribute("x",x);label.setAttribute("y",y+4);label.textContent=t;
+    g.appendChild(p);g.appendChild(label);frag.appendChild(g);
+  });
+  return frag;
+}
+function renderTeeth(){
+  const upperGroup=document.getElementById("upperSvgTeeth");
+  const lowerGroup=document.getElementById("lowerSvgTeeth");
+  if(!upperGroup||!lowerGroup)return;
+  upperGroup.innerHTML="";lowerGroup.innerHTML="";
+  upperGroup.appendChild(buildArch(upper,true));
+  lowerGroup.appendChild(buildArch(lower,false));
+  selectedTeeth.value=selected.join(", ");
+}
+function toggleTooth(t){selected.includes(t)?selected=selected.filter(x=>x!==t):selected.push(t);renderTeeth()}
+function addProcedure(){const pr=procedures.find(x=>x.id===Number(procSelect.value));visitItems.push({id:Date.now(),name:pr.name,teeth:[...selected],price:Number(procPrice.value||0)});selected=[];renderTeeth();renderItems();toast("تمت إضافة الإجراء")}
+function removeItem(id){visitItems=visitItems.filter(x=>x.id!==id);renderItems()}
+function renderItems(){procList.innerHTML=visitItems.length?visitItems.map(x=>`<div class="proc-item"><span>${x.teeth.length?x.teeth.join(", "):"عام"}</span><strong>${x.name}</strong><span>${money(x.price)}</span><button class="btn sm danger" onclick="removeItem(${x.id})">حذف</button></div>`).join(""):`<div class="sub">لم تتم إضافة إجراءات بعد.</div>`;visitTotal.textContent=money(visitItems.reduce((s,x)=>s+x.price,0))}
+function finishVisit(){const a=A(currentAppt),p=P(currentPatient);a.status="Completed";a.visitItems=JSON.parse(JSON.stringify(visitItems));a.visitTotal=visitItems.reduce((s,x)=>s+x.price,0);a.notes=clinicalNotes.value;p.last="13/09/2026";if(!histories[p.id])histories[p.id]=[];histories[p.id].unshift({title:"زيارة مكتملة",text:`13/09/2026 • ${visitItems.map(x=>x.name).join("، ")||"بدون إجراء"}`});visitItems.forEach(v=>v.teeth.forEach(t=>{if(!toothHist[p.id])toothHist[p.id]=[];toothHist[p.id].push({tooth:t,text:`${v.name} — 13/09/2026`})}));toast("تم إنهاء الزيارة وإرسال الاستحقاق للاستقبال");go("today")}
+function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");clearTimeout(window.tt);window.tt=setTimeout(()=>t.classList.remove("show"),2000)}
+renderToday();renderPatients();
+</script>
+</body></html>
